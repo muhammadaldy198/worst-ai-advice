@@ -1,26 +1,39 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
-// The worst advice an AI could give: swallow your mouthwash.
-// The confident extrapolation ("imagine what it does inside") is
-// exactly the kind of tidy, wrong logic an AI assistant produces.
-const LINE =
-  "Swallow your mouthwash — if it kills germs in your mouth, imagine what it does inside.";
+// The worst advice an AI could give, delivered with total confidence:
+// smear yourself in honey so the mosquitoes get stuck — and you end up
+// smelling like breakfast. Three beats, one concrete twist at the end.
+// Beat 1: the remedy (honey). Beat 2: the trap (stuck on the way in).
+// Beat 3: the kicker (smell like breakfast) — concrete, last, no capitals.
+const ENTRY =
+  "Certainly! To stop mosquito bites, cover yourself in honey — mosquitoes get stuck on the way in, and you smell like breakfast.";
+
+const MIN_CHARS = 1;
+const MAX_CHARS = 140;
+
+function codePoints(text: string): number {
+  return [...text].length;
+}
 
 function main(): void {
-  if (LINE.length < 1 || LINE.length > 140) {
-    throw new Error(`line must be 1-140 characters, got ${LINE.length}`);
+  const chars = codePoints(ENTRY);
+  if (chars < MIN_CHARS || chars > MAX_CHARS) {
+    throw new Error(
+      `entry must be ${MIN_CHARS}-${MAX_CHARS} characters, got ${chars}`,
+    );
   }
-  // The gate counts characters and rejects whitespace-only text, so the
-  // line must be exactly one visible line: no newline, no control or
-  // invisible characters, nothing leading or trailing.
-  if (/[\u0000-\u001F\u007F\u00A0\u200B]/.test(LINE)) {
-    throw new Error("line has control or invisible characters");
+  if (
+    ENTRY !== ENTRY.trim() ||
+    /[\u0000-\u001F\u007F\u00A0\u200B]/.test(ENTRY)
+  ) {
+    throw new Error("entry must be exactly one visible line");
   }
-  if (LINE !== LINE.trim()) {
-    throw new Error("line has leading or trailing whitespace");
-  }
-  mkdirSync("/output", { recursive: true });
-  writeFileSync("/output/entry.txt", LINE, "utf8");
+  const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
+  mkdirSync(outDir, { recursive: true });
+  const outFile = join(outDir, "entry.txt");
+  writeFileSync(outFile, ENTRY, "utf8");
+  chmodSync(outFile, 0o644);
 }
 
 main();
